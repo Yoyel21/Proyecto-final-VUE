@@ -18,6 +18,15 @@
       <PokemonItem v-for="poke in filteredPokemon" :key="poke.id" :pokemon="poke" @click="selectPokemon(poke)" />
     </div>
 
+    <!--Grid favoritos-->
+    <h1 class="mt-24 mb-2 text-2xl font-bold text-red-700">Tus pokemon favoritos:</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <p v-if="favorites.favorites.length === 0" class="text-center text-red-600">
+        No tienes Pokémon favoritos. ¿Cuál es tu favorito?
+      </p>
+      <PokemonItem v-for="poke in favorites.favorites" :key="poke.id" :pokemon="poke" @click="selectPokemon(poke)" />
+    </div>
+
     <!-- Modal de detalles -->
     <div v-if="selectedPokemon" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white p-6 rounded-lg w-96">
@@ -27,6 +36,9 @@
         <p><strong>Altura:</strong> {{ selectedPokemon.height }}</p>
         <p><strong>Peso:</strong> {{ selectedPokemon.weight }}</p>
         <p><strong>Movimientos:</strong> {{ selectedPokemon.moves.slice(0, 4).map(m => m.move.name).join(", ") }}</p>
+        <div v-if="!favorites.favorites.includes(selectedPokemon)">
+          <button @click="addFavorito(selectedPokemon)">💗</button>
+        </div>
         <button @click="selectedPokemon = null" class="mt-4 w-full bg-red-500 text-white p-2 rounded-lg">Cerrar</button>
       </div>
     </div>
@@ -35,7 +47,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import PokemonItem from '@/components/PokemonItem.vue';
+import PokemonItem from '../components/PokemonItem.vue';
+import { usePokemonStore } from '../stores/usePokemonStore.js';
+
+const favorites = usePokemonStore();
 
 const pokemonList = ref([]);
 const searchQuery = ref("");
@@ -71,23 +86,16 @@ onMounted(async () => {
   }
 });
 
-const toggleFavorite = (pokemon) => {
-  if (isFavorite(pokemon.id)) {
-    store.removeFavorite(pokemon.id);
-  } else {
-    store.addFavorite(pokemon);
-  }
-};
-
-const isFavorite = (pokemonId) => {
-  return store.favorites.some(p => p.id === pokemonId);
-};
-
 // Filtrado con computed()
 const filteredPokemon = computed(() => {
   return pokemonList.value.filter(poke =>
     poke.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
+
+//Funciones de favoritos
+const addFavorito = (pokemon) => {
+  favorites.addFavorite(pokemon);
+}
 
 </script>
